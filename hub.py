@@ -1,7 +1,7 @@
 #! /usr/bin/python3 -u
 
 import sys
-import sms as SMS
+from sms import SepcapMessagingSystem as SMS
 
 
 def main():
@@ -11,23 +11,28 @@ def main():
 
     print("Hub")
 
-    stdin = SMS.SepcapMessagingSystem(sys.stdin, sys.stdout)
-    sms = SMS.SepcapMessagingSystem(open(sys.argv[2], "rb"), open(sys.argv[1], "wb"))
+    HubToClass = open(sys.argv[1], 'wb')
+    ClassToHub = open(sys.argv[2], 'rb')
+    HubToInterface = open(sys.argv[3], 'wb')
+    InterfaceToHub = open(sys.argv[4], 'rb')
+
+    std = SMS(sys.stdin, sys.stdout)
+    classification = SMS(ClassToHub, HubToClass)
 
     while 1:
-        sms.sentPacket(
-            sms.Address.Classification,
-            sms.Message.EmergencyStop.type,
-            sms.Message.EmergencyStop.Resume
+        classification.sentPacket(
+            SMS.Address.Classification,
+            SMS.Message.EmergencyStop.type,
+            SMS.Message.EmergencyStop.Resume
         )
 
-        if sms.isData():
+        if classification.isData():
             sys.stdout.write('HUB: ')
-            address, mtype, data = sms.readPacket()
+            address, mtype, data = classification.readPacket()
             sys.stdout.write(f'{address}, {mtype}, {data}\n')
 
-        if stdin.isData():
-            c = stdin.read()
+        if std.isData():
+            c = std.read()
             if c == '\x1b':         # x1b is ESC
                 break
 
