@@ -35,8 +35,7 @@ python -V < $ptyHubToInterface_out > $ptyInterfaceToHub_in &
 P5=$!
 
 # Start Classification script
-./$ClassificationScript < $ptyHubToClass_out &
-# > $ptyClassToHub_in &
+./$ClassificationScript $ptyHubToClass_out $ptyClassToHub_in &
 P6=$!
 
 # Start Hub

@@ -1,30 +1,18 @@
 #! /usr/bin/python3 -u
 
 import sys
-import sms
-import kbhit
-
-def receiveMessage(kb):
-    line = [kb.getch(), kb.getch()]
-    
-    if not line:
-        return None
-    
-    return sms.lineToMessage(line)
+import sms as SMS
 
 def main():
     print("Class")
 
-    kb = kbhit.KBHit()
-    
-    while 1:
-        message = receiveMessage(kb)
+    sms = SMS.SepcapMessagingSystem(open(sys.argv[1], "rb"))
+    CtH = open(sys.argv[2], "w")
 
-        if message is not None:
-            address, mtype, data = sms.decodeMessage(message)
-            print(address, mtype, data)
-        else:
-            print("None")
+    while 1:
+        if sms.isData():
+            address, mtype, data = sms.readPacket()
+            print(f'Class: {address} {mtype} {data}', file=CtH)
 
 
 if __name__ == "__main__":
