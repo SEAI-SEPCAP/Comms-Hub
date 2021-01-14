@@ -6,13 +6,12 @@ import sms as SMS
 def main():
     print("Class")
 
-    sms = SMS.SepcapMessagingSystem(open(sys.argv[1], "rb"))
-    CtH = open(sys.argv[2], "w")
+    sms = SMS.SepcapMessagingSystem(open(sys.argv[1], "rb"), open(sys.argv[2], "wb"))
 
     while 1:
         if sms.isData():
             address, mtype, data = sms.readPacket()
-            print(f'Class: {address} {mtype} {data}', file=CtH)
+            sms.sentPacket(address, mtype, data)
 
 
 if __name__ == "__main__":

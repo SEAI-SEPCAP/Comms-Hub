@@ -13,7 +13,8 @@ class SepcapMessagingSystem(object):
     docstring
     """
 
-    stream = None
+    stream_in = None
+    stream_out = None
     old_settings = None
 
     class Address(enum.IntEnum):
@@ -38,19 +39,20 @@ class SepcapMessagingSystem(object):
             Stop = 0
             Start = 1
 
-    def __init__(self, stream):
-        self.stream = stream
-        self.old_settings = termios.tcgetattr(self.stream)
-        tty.setcbreak(self.stream.fileno())
+    def __init__(self, stream_in, stream_out):
+        self.stream_in = stream_in
+        self.stream_out = stream_out
+        self.old_settings = termios.tcgetattr(self.stream_in)
+        tty.setcbreak(self.stream_in.fileno())
 
     def __del__(self):
-        termios.tcsetattr(self.stream, termios.TCSADRAIN, self.old_settings)
+        termios.tcsetattr(self.stream_in, termios.TCSADRAIN, self.old_settings)
 
     def isData(self):
-        return select.select([self.stream], [], [], 0) == ([self.stream], [], [])
+        return select.select([self.stream_in], [], [], 0) == ([self.stream_in], [], [])
 
     def read(self, n=1):
-        return self.stream.read(n)
+        return self.stream_in.read(n)
 
     def lineToMessage(self, line):
         return [i for i in list(line)]
@@ -62,7 +64,7 @@ class SepcapMessagingSystem(object):
         return byte & 0x0F
 
     def decodeMessage(self, message: list):
-        return self.getAddress(message[0]), self.getMessageType(message[0]), message[1:]
+        return self.getAddress(message[0]), self.getMessageType(message[0]), message[1]
 
     def encodeMessage(self, address: int, messageType: int, data: int):
         return bytes([(address << 4) + messageType, data])
@@ -71,3 +73,7 @@ class SepcapMessagingSystem(object):
         line = bytearray(self.read(2))
         message = self.lineToMessage(line)
         return self.decodeMessage(message)
+    
+    def sentPacket(self, address: int, messageType: int, data: int):
+        message = self.encodeMessage(address, messageType, data)
+        self.stream_out.write(message)
