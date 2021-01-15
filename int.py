@@ -3,6 +3,7 @@
 import sys
 from sms import SepcapMessagingSystem as SMS
 
+
 def main():
 
     sms = SMS(open(sys.argv[1], "rb"), open(sys.argv[2], "wb"))
