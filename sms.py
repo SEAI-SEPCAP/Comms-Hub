@@ -6,7 +6,7 @@ import select
 import tty
 import termios
 import enum
-import serial
+
 
 class SepcapMessagingSystem(object):
     """
@@ -55,6 +55,9 @@ class SepcapMessagingSystem(object):
                 self.stream_in, termios.TCSADRAIN, self.old_settings)
 
     def isData(self):
+        if self.sms_type == "serial":
+            return self.stream_in.in_waiting
+
         return select.select([self.stream_in], [], [], 0) == ([self.stream_in], [], [])
 
     def read(self, n=1):
@@ -87,12 +90,3 @@ class SepcapMessagingSystem(object):
         else:
             self.stream_out.write(message)
         self.stream_out.flush()
-
-class AutoSerial(serial.Serial):
-    stream = None
-
-    def __init__(self, *args):
-        self.stream = serial.Serial(*args)
-    
-    def __del__(self):
-        self.stream.close()
