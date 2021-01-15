@@ -1,7 +1,7 @@
 #! /bin/bash
 
 HubScript="hub.py"
-InterfaceScript="class.py"
+InterfaceScript="int.py"
 ClassificationScript="class.py"
 
 ptyHubToInterface_in=".ptyHubToInterface_in"
@@ -31,7 +31,7 @@ P4=$!
 sleep 0.25
 
 # Start Interface script
-python -V < $ptyHubToInterface_out > $ptyInterfaceToHub_in &
+./$InterfaceScript $ptyHubToInterface_out $ptyInterfaceToHub_in &
 P5=$!
 
 # Start Classification script
