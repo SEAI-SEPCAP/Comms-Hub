@@ -6,7 +6,7 @@ import select
 import tty
 import termios
 import enum
-
+import serial
 
 class SepcapMessagingSystem(object):
     """
@@ -16,6 +16,7 @@ class SepcapMessagingSystem(object):
     stream_in = None
     stream_out = None
     old_settings = None
+    sms_type = None
 
     class Address(enum.IntEnum):
         Broadcast = 0
@@ -39,14 +40,19 @@ class SepcapMessagingSystem(object):
             Stop = 0
             Start = 1
 
-    def __init__(self, stream_in, stream_out):
+    def __init__(self, stream_in, stream_out, type="tty"):
         self.stream_in = stream_in
         self.stream_out = stream_out
-        self.old_settings = termios.tcgetattr(self.stream_in)
-        tty.setcbreak(self.stream_in.fileno())
+        self.sms_type = type
+
+        if (self.sms_type == "tty"):
+            self.old_settings = termios.tcgetattr(self.stream_in)
+            tty.setcbreak(self.stream_in.fileno())
 
     def __del__(self):
-        termios.tcsetattr(self.stream_in, termios.TCSADRAIN, self.old_settings)
+        if (self.sms_type == "tty"):
+            termios.tcsetattr(
+                self.stream_in, termios.TCSADRAIN, self.old_settings)
 
     def isData(self):
         return select.select([self.stream_in], [], [], 0) == ([self.stream_in], [], [])
@@ -73,7 +79,20 @@ class SepcapMessagingSystem(object):
         line = bytearray(self.read(2))
         message = self.lineToMessage(line)
         return self.decodeMessage(message)
-    
-    def sentPacket(self, address: int, messageType: int, data: int):
+
+    def sendPacket(self, address: int, messageType: int, data: int):
         message = self.encodeMessage(address, messageType, data)
-        self.stream_out.write(message)
+        if self.sms_type == "std":
+            print(message, file=self.stream_out)
+        else:
+            self.stream_out.write(message)
+        self.stream_out.flush()
+
+class AutoSerial(serial.Serial):
+    stream = None
+
+    def __init__(self, *args):
+        self.stream = serial.Serial(*args)
+    
+    def __del__(self):
+        self.stream.close()
